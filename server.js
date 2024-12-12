@@ -4,10 +4,9 @@ var { createHandler } = require("graphql-http/lib/use/express");
 var { buildSchema } = require("graphql");
 const projectSchema = require("./Project/schema");
 const userSchema = require("./User/schema");
-const kanbanSchema = require("./Kanban/schema");
 const taskSchema = require("./Tasks/schema");
-const { mergeSchemas } = require("@graphql-tools/merge");
-const { makeExecutableSchema } = require("@graphql-tools/schema");
+const columnSchema = require("./Kanban/columns/schema");
+const kanbanSchema = require("./Kanban/kanban/schema");
 
 const mongoose = require("mongoose");
 const MONGO_URI = process.env.MONGO_CONNECT_STRING;
@@ -41,19 +40,26 @@ app.use(
 );
 
 app.use(
-  "/bellone/protected/kanban",
-  // authenticate, // Uncomment this line to require authentication
-  createHandler({
-    schema: kanbanSchema, // Kanban schema
-    graphiql: true, // GraphiQL interface for testing queries
-  })
-);
-
-app.use(
   "/bellone/protected/task",
   // authenticate, // Uncomment this line to require authentication
   createHandler({
     schema: taskSchema, // Task schema
+    graphiql: true, // GraphiQL interface for testing queries
+  })
+);
+app.use(
+  "/bellone/protected/columns",
+  // authenticate, // Uncomment this line to require authentication
+  createHandler({
+    schema: columnSchema, // Task schema
+    graphiql: true, // GraphiQL interface for testing queries
+  })
+);
+app.use(
+  "/bellone/protected/kanban",
+  // authenticate, // Uncomment this line to require authentication
+  createHandler({
+    schema: kanbanSchema, // Kanban schema
     graphiql: true, // GraphiQL interface for testing queries
   })
 );

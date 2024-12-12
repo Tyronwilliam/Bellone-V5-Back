@@ -50,7 +50,7 @@ const RootTaskQuery = new GraphQLObjectType({
     },
     tasksByProject: {
       type: new GraphQLList(TaskType),
-      args: { project_id: { type: GraphQLID } }, // Accept project_id as an argument
+      args: { project_id: { type: GraphQLString } }, // Accept project_id as an argument
       resolve: async (_, { project_id }) => {
         return await Task.find({ project_id }); // Find tasks where project_id matches
       },

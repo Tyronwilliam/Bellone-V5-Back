@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const TaskSchema = new mongoose.Schema({
-  project_id: { type: String , require: true },
+  project_id: { type: String, require: true },
   title: { type: String, require: true },
   description: { type: String, require: false },
   start_date: { type: Number, require: false },
