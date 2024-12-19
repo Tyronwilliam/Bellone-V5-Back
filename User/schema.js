@@ -3,6 +3,7 @@ const {
   GraphQLSchema,
   GraphQLString,
   GraphQLNonNull,
+  GraphQLList,
 } = require("graphql");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -14,12 +15,29 @@ const UserType = new GraphQLObjectType({
   fields: {
     id: { type: GraphQLString },
     email: { type: GraphQLString },
+    password: { type: GraphQLString },
   },
 });
-
+const RootQueryUser = new GraphQLObjectType({
+  name: "RootQueryUser",
+  fields: {
+    getUserById: {
+      type: new GraphQLList(UserType),
+      args: {
+        id: { type: GraphQLString },
+      },
+      resolve: async (_, { id }) => {
+        if (!id) {
+          throw new Error("Id is required");
+        }
+        return await User.findById({ id });
+      },
+    },
+  },
+});
 // Créer une mutation pour l'enregistrement
 const MutationUser = new GraphQLObjectType({
-  name: "MutationUser ",
+  name: "MutationUser",
   fields: {
     register: {
       type: UserType,
@@ -79,5 +97,6 @@ const MutationUser = new GraphQLObjectType({
 
 // Créer et exporter le schéma GraphQ
 module.exports = new GraphQLSchema({
+  query: RootQueryUser,
   mutation: MutationUser,
 });

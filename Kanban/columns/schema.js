@@ -13,12 +13,12 @@ const Column = require("./model");
 const ColumnType = new GraphQLObjectType({
   name: "Column",
   fields: {
-    id: { type: GraphQLID }, // GraphQL ID corresponds to MongoDB _id
-    title: { type: GraphQLString },
+    id: { type: new GraphQLNonNull(GraphQLString) }, // L'ID est obligatoire pour identifier la colonne
+    title: { type: new GraphQLNonNull(GraphQLString) },
     color: { type: GraphQLString },
-    project_id: { type: GraphQLString },
-    order: { type: GraphQLInt },
-    pseudo_id: { type: GraphQLString },
+    project_id: { type: new GraphQLNonNull(GraphQLString) },
+    order: { type: new GraphQLNonNull(GraphQLInt) },
+    pseudo_id: { type: new GraphQLNonNull(GraphQLString) },
   },
 });
 // Root Query for Columns
@@ -27,7 +27,7 @@ const ColumnQuery = new GraphQLObjectType({
   fields: {
     columns: {
       type: ColumnType,
-      args: { id: { type: GraphQLID } }, // Accepts column ID as an argument
+      args: { id: { type: GraphQLString } }, // Accepts column ID as an argument
       resolve: async (_, { id }) => {
         return await Column.findById(id); // Fetch a column by its ID
       },
@@ -44,10 +44,12 @@ const ColumnQuery = new GraphQLObjectType({
 });
 
 const fullArg = {
-  title: { type: new GraphQLNonNull(GraphQLString) },
-  color: { type: new GraphQLNonNull(GraphQLString) },
-  project_id: { type: new GraphQLNonNull(GraphQLString) },
-  order: { type: new GraphQLNonNull(GraphQLInt) },
+  id: { type: GraphQLString },
+  title: { type: GraphQLString },
+  color: { type: GraphQLString },
+  project_id: { type: GraphQLString },
+  order: { type: GraphQLInt },
+  pseudo_id: { type: GraphQLString },
 };
 // Mutations for Columns
 const ColumnMutation = new GraphQLObjectType({

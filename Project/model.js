@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const User = require("../User/model");
 const ProjectSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -17,6 +17,10 @@ const ProjectSchema = new mongoose.Schema(
     creator: { type: Number, required: true },
     time: { type: Number, default: 0 },
     image: { type: String, default: "" },
+    collaborators: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Correct référence à User avec ObjectId
+      required: false,
+    },
   },
   { timestamps: true }
 );

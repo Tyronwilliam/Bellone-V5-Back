@@ -13,28 +13,35 @@ const Task = require("./model");
 const TaskType = new GraphQLObjectType({
   name: "Task",
   fields: {
-    id: { type: GraphQLID }, // ID of the task
+    id: { type: GraphQLString }, // ID of the task
     project_id: { type: GraphQLString },
     title: { type: GraphQLString },
     description: { type: GraphQLString },
-    start_date: { type: GraphQLInt },
+    start_date: { type: GraphQLFloat },
     due_date: { type: GraphQLInt },
     time: { type: GraphQLInt },
     members: { type: new GraphQLList(GraphQLString) }, // List of members (user IDs)
     column_id: { type: GraphQLString }, // Column ID (could be string or number)
     pseudo_id: { type: GraphQLString }, // Expose pseudo_id in the GraphQL schema
+    order: { type: GraphQLInt },
+    createdAt: { type: GraphQLString }, // Add the createdAt field
+    updatedAt: { type: GraphQLString }, // Add the updatedAt field
+    completeAt: { type: GraphQLString },
   },
 });
 
 const fullArg = {
-  project_id: { type: new GraphQLNonNull(GraphQLString) },
-  title: { type: new GraphQLNonNull(GraphQLString) },
+  id: { type: GraphQLString }, // ID of the task
+  project_id: { type: GraphQLString },
+  title: { type: GraphQLString },
   description: { type: GraphQLString },
-  start_date: { type: GraphQLInt },
+  start_date: { type: GraphQLFloat },
   due_date: { type: GraphQLInt },
   time: { type: GraphQLInt },
-  members: { type: new GraphQLNonNull(new GraphQLList(GraphQLString)) }, // Array of user IDs (strings)
-  column_id: { type: new GraphQLNonNull(GraphQLString) }, // Column ID
+  members: { type: new GraphQLList(GraphQLString) }, // Array of user IDs (strings)
+  column_id: { type: GraphQLString }, // Column ID
+  pseudo_id: { type: GraphQLString },
+  order: { type: GraphQLInt },
 };
 
 const RootTaskQuery = new GraphQLObjectType({

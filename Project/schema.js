@@ -8,7 +8,7 @@ const {
   GraphQLNonNull,
   GraphQLID,
 } = require("graphql");
-const Project = require("./model");
+const Project = require("./model.js");
 
 // Définir le type Project
 const ProjectType = new GraphQLObjectType({
@@ -26,6 +26,9 @@ const ProjectType = new GraphQLObjectType({
     creator: { type: GraphQLInt },
     time: { type: GraphQLInt },
     image: { type: GraphQLString },
+    collaborators: {
+      type: new GraphQLList(GraphQLString),
+    },
   },
 });
 
@@ -36,13 +39,13 @@ const RootQueryProject = new GraphQLObjectType({
     projects: {
       type: new GraphQLList(ProjectType),
       args: {
-        creator: { type: GraphQLInt }, // Define creator argument
+        collaborator: { type: GraphQLString }, // Define creator argument
       },
-      resolve: async (_, { creator }) => {
-        if (!creator) {
-          throw new Error("Creator is required");
+      resolve: async (_, { collaborator }) => {
+        if (!collaborator) {
+          throw new Error("collaborator is required");
         }
-        return await Project.find({ creator }); // Find tasks where project_id matches
+        return await Project.find({ collaborators: collaborator }); // Find tasks where project_id matches
       },
     },
     project: {
@@ -55,6 +58,7 @@ const RootQueryProject = new GraphQLObjectType({
   },
 });
 const fullArg = {
+  id: { type: GraphQLID },
   title: { type: new GraphQLNonNull(GraphQLString) },
   description: { type: new GraphQLNonNull(GraphQLString) },
   clientId: { type: new GraphQLNonNull(GraphQLInt) },
@@ -65,6 +69,9 @@ const fullArg = {
   progress: { type: GraphQLInt },
   creator: { type: new GraphQLNonNull(GraphQLInt) },
   image: { type: GraphQLString },
+  collaborators: {
+    type: new GraphQLList(GraphQLString),
+  },
 };
 // Mutation : Ajouter ou modifier un projet
 const MutationProject = new GraphQLObjectType({
@@ -78,6 +85,7 @@ const MutationProject = new GraphQLObjectType({
         return await project.save();
       },
     },
+
     updateProject: {
       type: ProjectType,
       args: fullArg,
