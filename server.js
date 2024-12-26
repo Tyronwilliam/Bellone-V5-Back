@@ -8,6 +8,7 @@ const taskSchema = require("./Tasks/schema");
 const columnSchema = require("./Kanban/columns/schema");
 const kanbanSchema = require("./Kanban/kanban/schema");
 const collaboratorsSchema = require("./Collaborators/schema");
+const roleSchema = require("./Role/schema");
 var cors = require("cors");
 
 const mongoose = require("mongoose");
@@ -34,7 +35,7 @@ mongoose
 // Create and use the GraphQL handler.
 // Route publique (non protégée par l'authentification)
 app.use(
-  "/bellone/public",
+  "/bellone/public/user",
   createHandler({
     schema: userSchema, // Public user schema
     graphiql: true, // GraphiQL interface for testing queries
@@ -78,6 +79,14 @@ app.use(
   // authenticate, // Uncomment this line to require authentication
   createHandler({
     schema: collaboratorsSchema, // Kanban schema
+    graphiql: true, // GraphiQL interface for testing queries
+  })
+);
+app.use(
+  "/bellone/protected/role",
+  // authenticate, // Uncomment this line to require authentication
+  createHandler({
+    schema: roleSchema, // Kanban schema
     graphiql: true, // GraphiQL interface for testing queries
   })
 );

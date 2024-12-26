@@ -9,13 +9,6 @@ const TaskSchema = new mongoose.Schema({
   time: { type: Number, require: false },
   members: {
     type: [mongoose.Schema.Types.Mixed], // Array of strings (representing user IDs)
-    required: true, // Ensure at least one member is assigned
-    validate: {
-      validator: function (v) {
-        return v.length > 0; // Validation to ensure the array isn't empty
-      },
-      message: "At least one member must be assigned",
-    },
   },
   column_id: {
     type: mongoose.Schema.Types.Mixed, // This allows either number or string types for column_id

@@ -14,13 +14,9 @@ const ProjectSchema = new mongoose.Schema(
       default: "OPEN",
     },
     progress: { type: Number, default: 0 },
-    creator: { type: Number, required: true },
+    creator: { type: String, required: true },
     time: { type: Number, default: 0 },
     image: { type: String, default: "" },
-    collaborators: {
-      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Correct référence à User avec ObjectId
-      required: false,
-    },
   },
   { timestamps: true }
 );

@@ -23,12 +23,9 @@ const ProjectType = new GraphQLObjectType({
     endDate: { type: GraphQLString },
     status: { type: GraphQLString },
     progress: { type: GraphQLInt },
-    creator: { type: GraphQLInt },
+    creator: { type: GraphQLString },
     time: { type: GraphQLInt },
     image: { type: GraphQLString },
-    collaborators: {
-      type: new GraphQLList(GraphQLString),
-    },
   },
 });
 
@@ -39,13 +36,15 @@ const RootQueryProject = new GraphQLObjectType({
     projects: {
       type: new GraphQLList(ProjectType),
       args: {
-        collaborator: { type: GraphQLString }, // Define creator argument
+        creator: { type: GraphQLString }, // Define creator argument
       },
-      resolve: async (_, { collaborator }) => {
-        if (!collaborator) {
-          throw new Error("collaborator is required");
+      resolve: async (_, { creator }) => {
+        if (!creator) {
+          throw new Error("CreatorId is required");
         }
-        return await Project.find({ collaborators: collaborator }); // Find tasks where project_id matches
+        // Find projects where the collaboratorId exists in the collaborators array
+        const projects = await Project.find({ creator: creator });
+        return projects;
       },
     },
     project: {
@@ -67,11 +66,8 @@ const fullArg = {
   endDate: { type: new GraphQLNonNull(GraphQLString) },
   status: { type: GraphQLString },
   progress: { type: GraphQLInt },
-  creator: { type: new GraphQLNonNull(GraphQLInt) },
+  creator: { type: new GraphQLNonNull(GraphQLString) },
   image: { type: GraphQLString },
-  collaborators: {
-    type: new GraphQLList(GraphQLString),
-  },
 };
 // Mutation : Ajouter ou modifier un projet
 const MutationProject = new GraphQLObjectType({
@@ -81,7 +77,7 @@ const MutationProject = new GraphQLObjectType({
       type: ProjectType,
       args: fullArg,
       resolve: async (_, args) => {
-        const project = new Project(args);
+        const project = new Project(args); // Crée un nouveau projet
         return await project.save();
       },
     },
@@ -93,21 +89,6 @@ const MutationProject = new GraphQLObjectType({
         const project = await Project.findById(id);
         if (!project) throw new Error("Project not found");
 
-        Object.keys(updates).forEach((key) => {
-          if (updates[key] !== undefined) project[key] = updates[key];
-        });
-
-        return await project.save();
-      },
-    },
-    patchProject: {
-      type: ProjectType,
-      args: fullArg,
-      resolve: async (_, { id, ...updates }) => {
-        const project = await Project.findById(id);
-        if (!project) throw new Error("Project not found");
-
-        // Met à jour uniquement les champs qui sont définis dans `updates`
         Object.keys(updates).forEach((key) => {
           if (updates[key] !== undefined) project[key] = updates[key];
         });

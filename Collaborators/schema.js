@@ -2,69 +2,145 @@ const {
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLString,
-  GraphQLInt,
   GraphQLList,
-  GraphQLID,
   GraphQLNonNull,
+  GraphQLInputObjectType,
 } = require("graphql");
 
-const Collaborator = require("./model"); // Import the Collaborator model
+const Collaborator = require("./model"); // Importer le modèle Collaborator
 
-const CollaboratorType = new GraphQLObjectType({
-  name: "Collaborator",
+// Définir le type Address
+const AddressInput = new GraphQLInputObjectType({
+  name: "AddressInput",
   fields: {
-    id: { type: GraphQLID },
-    projectId: { type: new GraphQLList(GraphQLID) },
-    userId: { type: GraphQLID },
-    role: {
-      type: new GraphQLObjectType({
-        name: "Role",
-        fields: {
-          roles: { type: new GraphQLList(GraphQLID) }, // List of role IDs
-        },
-      }),
-    },
-    joinedAt: { type: GraphQLString },
+    street: { type: GraphQLString },
+    city: { type: GraphQLString },
+    postalCode: { type: GraphQLString },
+    country: { type: GraphQLString },
+  },
+});
+const AddressType = new GraphQLObjectType({
+  name: "AddressType",
+  fields: {
+    street: { type: GraphQLString },
+    city: { type: GraphQLString },
+    postalCode: { type: GraphQLString },
+    country: { type: GraphQLString },
   },
 });
 
-// Query: Retrieve collaborators for a specific project
+// Définir le type Role
+const RoleType = new GraphQLObjectType({
+  name: "Role",
+  fields: {
+    projectId: { type: GraphQLString },
+    role: { type: new GraphQLList(GraphQLString) },
+  },
+});
+
+// Définir le type RoleInput (pour les mutations)
+const RoleInputType = new GraphQLInputObjectType({
+  name: "RoleInput",
+  fields: {
+    projectId: { type: GraphQLString },
+    role: { type: new GraphQLList(GraphQLString) },
+  },
+});
+
+// Définir le type Collaborator
+const CollaboratorType = new GraphQLObjectType({
+  name: "Collaborator",
+  fields: {
+    id: { type: GraphQLString },
+    projectId: { type: GraphQLString },
+    userId: { type: GraphQLString },
+    roles: { type: new GraphQLList(RoleType) },
+    creator: { type: new GraphQLNonNull(GraphQLString) },
+    email: { type: new GraphQLNonNull(GraphQLString) },
+    phone: { type: GraphQLString },
+    notes: { type: GraphQLString },
+    address: { type: AddressType },
+  },
+});
+
+// Query: Récupérer les collaborateurs par créateur ou par ID utilisateur
 const RootQueryCollaborator = new GraphQLObjectType({
   name: "RootQueryCollaborator",
   fields: {
-    collaborators: {
+    collaboratorsByCreator: {
       type: new GraphQLList(CollaboratorType),
-      args: { projectId: { type: GraphQLID } },
+      args: { creator: { type: GraphQLString } },
+      resolve: async (_, { creator }) => {
+        if (!creator) {
+          throw new Error("Creator ID is required");
+        }
+        return await Collaborator.find({ creator });
+      },
+    },
+    collaboratorsByProjectId: {
+      type: new GraphQLList(CollaboratorType),
+      args: { projectId: { type: GraphQLString } },
       resolve: async (_, { projectId }) => {
         if (!projectId) {
-          throw new Error("Project ID is required");
+          throw new Error("projectId ID is required");
         }
         return await Collaborator.find({ projectId });
       },
     },
-    collaborator: {
+    collaboratorByUserId: {
       type: CollaboratorType,
-      args: { id: { type: GraphQLID } },
-      resolve: async (_, { id }) => {
-        return await Collaborator.findById(id);
+      args: { userId: { type: GraphQLString } },
+      resolve: async (_, { userId }) => {
+        if (!userId) {
+          throw new Error("User ID is required");
+        }
+        return await Collaborator.findOne({ userId });
       },
     },
   },
 });
 
-// Mutation: Add or update a collaborator
+// Mutation: Ajouter ou mettre à jour un collaborateur
 const MutationCollaborator = new GraphQLObjectType({
   name: "MutationCollaborator",
   fields: {
     removeCollaborator: {
       type: CollaboratorType,
-      args: { id: { type: new GraphQLNonNull(GraphQLID) } },
+      args: { id: { type: new GraphQLNonNull(GraphQLString) } },
       resolve: async (_, { id }) => {
         const collaborator = await Collaborator.findByIdAndDelete(id);
         if (!collaborator) {
           throw new Error("Collaborator not found");
         }
         return collaborator;
+      },
+    },
+    addCollaborator: {
+      type: CollaboratorType,
+      args: {
+        projectId: { type: new GraphQLNonNull(new GraphQLList(GraphQLString)) },
+        roles: { type: new GraphQLNonNull(new GraphQLList(RoleInputType)) },
+        creator: { type: new GraphQLNonNull(GraphQLString) },
+        email: { type: new GraphQLNonNull(GraphQLString) },
+        phone: { type: GraphQLString },
+        notes: { type: GraphQLString },
+        address: { type: AddressInput },
+      },
+      resolve: async (
+        _,
+        { projectId, userId, roles, creator, email, phone, notes, address }
+      ) => {
+        const newCollaborator = new Collaborator({
+          projectId,
+          userId,
+          roles,
+          creator,
+          email,
+          phone,
+          notes,
+          address,
+        });
+        return await newCollaborator.save();
       },
     },
   },

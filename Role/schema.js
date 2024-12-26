@@ -8,30 +8,25 @@ const {
 } = require("graphql");
 
 // Import the Role model
-const Role = require("./models/Role"); // Adjust the path based on your project structure
+const Role = require("./model"); // Adjust the path based on your project structure
 
-// Define the RoleType (output type)
+// Define the RoleType
 const RoleType = new GraphQLObjectType({
   name: "Role",
   fields: {
-    id: { type: GraphQLID },
+    id: { type: GraphQLString },
     name: { type: GraphQLString },
     description: { type: GraphQLString },
     permissions: { type: new GraphQLList(GraphQLString) },
-    createdAt: { type: GraphQLString },
-    updatedAt: { type: GraphQLString },
   },
 });
 
-// Define the RoleInput type (input type for mutations)
-const RoleInputType = new GraphQLInputObjectType({
-  name: "RoleInput",
-  fields: {
-    name: { type: new GraphQLNonNull(GraphQLString) },
-    description: { type: GraphQLString },
-    permissions: { type: new GraphQLList(GraphQLString) },
-  },
-});
+// Argument definitions for Role operations
+const roleArgs = {
+  name: { type: new GraphQLNonNull(GraphQLString) },
+  description: { type: GraphQLString },
+  permissions: { type: new GraphQLList(GraphQLString) },
+};
 
 // Root Query for fetching roles
 const RootQueryRole = new GraphQLObjectType({
@@ -40,16 +35,14 @@ const RootQueryRole = new GraphQLObjectType({
     roles: {
       type: new GraphQLList(RoleType),
       resolve: async () => {
-        // Fetch all roles from the database
-        return await Role.find();
+        return await Role.find(); // Fetch all roles from the database
       },
     },
-    role: {
+    roleById: {
       type: RoleType,
-      args: { id: { type: GraphQLID } },
+      args: { id: { type: GraphQLString } },
       resolve: async (_, { id }) => {
-        // Fetch a single role by its ID
-        return await Role.findById(id);
+        return await Role.findById(id); // Fetch a single role by its ID
       },
     },
   },
@@ -61,16 +54,9 @@ const MutationRole = new GraphQLObjectType({
   fields: {
     createRole: {
       type: RoleType,
-      args: {
-        roleInput: { type: RoleInputType }, // Input object to create a new role
-      },
-      resolve: async (_, { roleInput }) => {
-        const { name, description, permissions } = roleInput;
-        const newRole = new Role({
-          name,
-          description,
-          permissions,
-        });
+      args: roleArgs,
+      resolve: async (_, { name, description, permissions }) => {
+        const newRole = new Role({ name, description, permissions });
         return await newRole.save();
       },
     },
@@ -79,27 +65,28 @@ const MutationRole = new GraphQLObjectType({
       type: RoleType,
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
-        roleInput: { type: RoleInputType }, // Input object to update an existing role
+        ...roleArgs,
       },
-      resolve: async (_, { id, roleInput }) => {
-        const { name, description, permissions } = roleInput;
-        const updatedRole = await Role.findByIdAndUpdate(
+      resolve: async (_, { id, name, description, permissions }) => {
+        if (!id) throw new Error("Update Role failed, Id is missing");
+
+        return await Role.findByIdAndUpdate(
           id,
           { name, description, permissions },
           { new: true } // Return the updated role
         );
-        return updatedRole;
       },
     },
 
     deleteRole: {
       type: RoleType,
       args: {
-        id: { type: new GraphQLNonNull(GraphQLID) }, // ID of the role to delete
+        id: { type: new GraphQLNonNull(GraphQLID) },
       },
       resolve: async (_, { id }) => {
-        const deletedRole = await Role.findByIdAndDelete(id);
-        return deletedRole;
+        if (!id) throw new Error("Delete Role failed, Id is missing");
+
+        return await Role.findByIdAndDelete(id); // Delete the role by ID
       },
     },
   },
