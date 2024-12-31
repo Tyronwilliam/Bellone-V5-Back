@@ -52,11 +52,11 @@ const CollaboratorType = new GraphQLObjectType({
   name: "Collaborator",
   fields: {
     id: { type: GraphQLString },
-    projectId: { type: GraphQLString },
+    projectId: { type: new GraphQLList(GraphQLString) },
     userId: { type: GraphQLString },
     roles: { type: new GraphQLList(RoleType) },
     creator: { type: new GraphQLNonNull(GraphQLString) },
-    email: { type: new GraphQLNonNull(GraphQLString) },
+    email: { type: GraphQLString },
     phone: { type: GraphQLString },
     notes: { type: GraphQLString },
     address: { type: AddressType },
@@ -74,12 +74,28 @@ const RootQueryCollaborator = new GraphQLObjectType({
         if (!creator) {
           throw new Error("Creator ID is required");
         }
-        return await Collaborator.find({ creator });
+        try {
+          const collaborators = await Collaborator.find({ creator });
+
+          // Filter out invalid entries (e.g., missing email or invalid projectId)
+          return collaborators.filter((collaborator) => {
+            if (collaborator.email === null) {
+              console.warn(
+                `Skipping collaborator with ID: ${collaborator.id}, missing email`
+              );
+              return false;
+            }
+            return true;
+          });
+        } catch (error) {
+          console.error("Error fetching collaborators:", error);
+          throw new Error("Failed to fetch collaborators");
+        }
       },
     },
     collaboratorsByProjectId: {
       type: new GraphQLList(CollaboratorType),
-      args: { projectId: { type: GraphQLString } },
+      args: { projectId: { type: new GraphQLList(GraphQLString) } },
       resolve: async (_, { projectId }) => {
         if (!projectId) {
           throw new Error("projectId ID is required");

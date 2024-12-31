@@ -23,7 +23,7 @@ const RoleSchema = new mongoose.Schema(
 const CollaboratorSchema = new mongoose.Schema(
   {
     projectId: {
-      type: String, // Tableau de références aux projets
+      type: [String], // Tableau de références aux projets
       ref: "Project",
       required: true,
     },
