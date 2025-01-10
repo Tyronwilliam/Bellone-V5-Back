@@ -13,17 +13,19 @@ const Task = require("./model");
 const MemberType = new GraphQLObjectType({
   name: "Member",
   fields: {
-    id: { type: GraphQLString }, // ID de l'utilisateur
-    email: { type: GraphQLString }, // Email de l'utilisateur
+    id: { type: GraphQLString },
+    email: { type: GraphQLString },
   },
 });
+
 const MemberInputType = new GraphQLInputObjectType({
   name: "MemberInputType",
   fields: {
-    id: { type: GraphQLString }, // ID de l'utilisateur
-    email: { type: GraphQLString }, // Email de l'utilisateur
+    id: { type: GraphQLString },
+    email: { type: GraphQLString },
   },
 });
+
 const TaskType = new GraphQLObjectType({
   name: "Task",
   fields: {
@@ -31,6 +33,7 @@ const TaskType = new GraphQLObjectType({
     project_id: { type: GraphQLString },
     title: { type: GraphQLString },
     description: { type: GraphQLString },
+    content: { type: GraphQLString },
     start_date: { type: GraphQLFloat },
     due_date: { type: GraphQLFloat },
     time: { type: GraphQLInt },
@@ -49,6 +52,7 @@ const fullArg = {
   project_id: { type: GraphQLString },
   title: { type: GraphQLString },
   description: { type: GraphQLString },
+  content: { type: GraphQLString },
   start_date: { type: GraphQLFloat },
   due_date: { type: GraphQLFloat },
   time: { type: GraphQLInt },
@@ -56,6 +60,7 @@ const fullArg = {
   column_id: { type: GraphQLString },
   pseudo_id: { type: GraphQLString },
   order: { type: GraphQLInt },
+  completeAt: { type: GraphQLFloat },
 };
 
 const RootTaskQuery = new GraphQLObjectType({
@@ -105,14 +110,30 @@ const MutationTask = new GraphQLObjectType({
         return await task.save();
       },
     },
+    deleteTask: {
+      type: GraphQLString,
+      args: { id: { type: GraphQLString } },
+      resolve: async (_, { id }) => {
+        try {
+          const result = await Task.deleteOne({ _id: id });
+
+          if (result.deletedCount === 1) {
+            return "Task deleted successfully";
+          } else {
+            throw new Error("Task not found");
+          }
+        } catch (error) {
+          console.error("Error deleting task:", error);
+          throw new Error("Error deleting task");
+        }
+      },
+    },
     deleteAllTasks: {
       type: GraphQLString,
       resolve: async () => {
         try {
-          // Delete all tasks from the database
           const result = await Task.deleteMany({});
 
-          // Return a success message
           return result.deletedCount > 0
             ? "All tasks have been successfully deleted."
             : "No tasks found to delete.";

@@ -4,6 +4,9 @@ const TaskSchema = new mongoose.Schema({
   project_id: { type: String, require: true },
   title: { type: String, require: true },
   description: { type: String, require: false },
+  content: {
+    type: Object,
+  },
   start_date: { type: Number, require: false },
   due_date: { type: Number, require: false },
   time: { type: Number, require: false },
